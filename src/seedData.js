@@ -16,25 +16,25 @@ export const seedNodes = [
   {
     id: "d-private",
     type: "domain",
-    position: { x: 150, y: 200 },
-    width: 450,
-    height: 450,
+    position: { x: 100, y: 150 },
+    width: 600,
+    height: 600,
     data: { label: "Private", domainId: "private" }
   },
   {
     id: "d-public",
     type: "domain",
-    position: { x: 400, y: 200 },
-    width: 450,
-    height: 450,
+    position: { x: 450, y: 150 },
+    width: 600,
+    height: 600,
     data: { label: "Public", domainId: "public" }
   },
   {
     id: "d-abstract",
     type: "domain",
-    position: { x: 275, y: 380 },
-    width: 450,
-    height: 450,
+    position: { x: 275, y: 430 },
+    width: 600,
+    height: 600,
     data: { label: "Abstract", domainId: "abstract" }
   },
   {
@@ -54,7 +54,7 @@ export const seedNodes = [
   {
     id: "n-2",
     type: "content",
-    position: { x: 580, y: 320 },
+    position: { x: 650, y: 320 },
     data: { 
       title: "Manager expectations",
       body: "Unclear deliverables for Q4. Need clarification on scope.",
@@ -67,7 +67,7 @@ export const seedNodes = [
   {
     id: "n-3",
     type: "content",
-    position: { x: 450, y: 520 },
+    position: { x: 480, y: 580 },
     data: { 
       title: "Late-night rumination",
       body: "Why do I always worry about things I can't control?",

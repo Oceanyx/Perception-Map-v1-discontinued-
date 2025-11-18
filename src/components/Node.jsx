@@ -63,8 +63,8 @@ export default function Node({ node, onDragStart, onDragEnd, onClick, onHover, o
   let boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
 
   if (isHovered) {
-    border = '2px solid #10B981';
-    boxShadow = '0 8px 24px rgba(16,185,129,0.4)';
+    border = '2px solid #FFFFFF';
+    boxShadow = '0 8px 24px rgba(255,255,255,0.3)';
   } else if (matches === 1) {
     const activeLens = lenses.find(l => activeLensIds.includes(l.id) && lensIds.includes(l.id));
     border = activeLens ? `2px solid ${activeLens.color}` : '2px solid #6C63FF';
@@ -81,7 +81,7 @@ export default function Node({ node, onDragStart, onDragEnd, onClick, onHover, o
       draggable
       onDragStart={(e) => onDragStart(e, node)}
       onDragEnd={(e) => onDragEnd(e, node)}
-      onClick={() => onClick(node)}
+      onClick={(e) => onClick(node, e)}
       onMouseEnter={() => onHover && onHover(node)}
       onMouseLeave={() => onLeave && onLeave()}
       style={{

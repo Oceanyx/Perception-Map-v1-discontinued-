@@ -159,7 +159,9 @@ export default function CanvasView() {
   const handleNodeClick = (node, e) => {
     e.stopPropagation();
     if (node.type === 'content') {
-      setSelectedNode(node);
+      // Force a fresh copy of the node to trigger re-render
+      const freshNode = nodes.find(n => n.id === node.id);
+      setSelectedNode(freshNode ? { ...freshNode } : node);
     }
   };
 
@@ -180,6 +182,13 @@ export default function CanvasView() {
         ? { ...node, data: { ...node.data, ...newData } }
         : node
     ));
+    // Update selected node if it's the one being edited
+    setSelectedNode(current => {
+      if (current && current.id === nodeId) {
+        return { ...current, data: { ...current.data, ...newData } };
+      }
+      return current;
+    });
   }, []);
 
   const handleDeleteNode = useCallback(async (nodeId) => {
@@ -204,9 +213,12 @@ export default function CanvasView() {
   }, []);
 
   const handleCreateNode = async () => {
+    const centerX = (window.innerWidth / 2 - pan.x) / zoom;
+    const centerY = (window.innerHeight / 2 - pan.y) / zoom;
+    
     const newNode = {
       type: 'content',
-      position: { x: (400 - pan.x) / zoom, y: (300 - pan.y) / zoom },
+      position: { x: centerX, y: centerY },
       data: {
         title: 'New Node',
         body: '',
@@ -266,10 +278,10 @@ export default function CanvasView() {
     return true;
   });
 
-  // Pan controls - FIXED
+  // Pan controls - FIXED to allow infinite panning
   const handleCanvasMouseDown = (e) => {
-    // Only start panning if clicking directly on the canvas container, not on nodes
-    if (e.target === containerRef.current || e.target === canvasRef.current) {
+    // Only start panning if clicking directly on the canvas, not on nodes
+    if (e.target === containerRef.current || e.target === canvasRef.current || e.target.tagName === 'svg') {
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
       e.preventDefault();
@@ -589,7 +601,7 @@ export default function CanvasView() {
         </div>
       </div>
 
-      {/* Canvas - FIXED */}
+      {/* Canvas - FIXED for infinite panning */}
       <div 
         ref={containerRef}
         onMouseDown={handleCanvasMouseDown}
@@ -620,9 +632,11 @@ export default function CanvasView() {
           <div style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: '0 0',
-            width: '5000px',
-            height: '5000px',
-            position: 'absolute'
+            width: '10000px',
+            height: '10000px',
+            position: 'absolute',
+            left: '-5000px',
+            top: '-5000px'
           }}>
             <svg style={{ 
               position: 'absolute', 
@@ -647,10 +661,10 @@ export default function CanvasView() {
                 return (
                   <g key={edge.id}>
                     <line
-                      x1={start.x}
-                      y1={start.y}
-                      x2={end.x}
-                      y2={end.y}
+                      x1={start.x + 5000}
+                      y1={start.y + 5000}
+                      x2={end.x + 5000}
+                      y2={end.y + 5000}
                       stroke={isHighlighted ? '#FFFFFF' : '#475569'}
                       strokeWidth={isHighlighted ? 3 : 2}
                       opacity={isHighlighted ? 0.8 : 0.4}
@@ -658,8 +672,8 @@ export default function CanvasView() {
                     />
                     {edge.label && (
                       <text
-                        x={(start.x + end.x) / 2}
-                        y={(start.y + end.y) / 2}
+                        x={(start.x + end.x) / 2 + 5000}
+                        y={(start.y + end.y) / 2 + 5000}
                         fill={isHighlighted ? '#FFFFFF' : '#94A3B8'}
                         fontSize="11px"
                         textAnchor="middle"
@@ -674,20 +688,28 @@ export default function CanvasView() {
             </svg>
 
             {filteredNodes.map(node => (
-              <Node
+              <div
                 key={node.id}
-                node={node}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onClick={handleNodeClick}
-                onHover={handleNodeHover}
-                onLeave={handleNodeLeave}
-                isDragging={draggingNode === node.id}
-                isHovered={hoveredNode === node.id}
-                activeLensIds={activeLensIds}
-                blendColors={blendColors}
-                lenses={lenses}
-              />
+                style={{
+                  position: 'absolute',
+                  left: node.position.x + 5000,
+                  top: node.position.y + 5000
+                }}
+              >
+                <Node
+                  node={{ ...node, position: { x: 0, y: 0 } }}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onClick={handleNodeClick}
+                  onHover={handleNodeHover}
+                  onLeave={handleNodeLeave}
+                  isDragging={draggingNode === node.id}
+                  isHovered={hoveredNode === node.id}
+                  activeLensIds={activeLensIds}
+                  blendColors={blendColors}
+                  lenses={lenses}
+                />
+              </div>
             ))}
           </div>
         </div>
@@ -695,6 +717,7 @@ export default function CanvasView() {
 
       {selectedNode && (
         <NodeDetailPanel
+          key={selectedNode.id}
           node={selectedNode}
           onClose={() => setSelectedNode(null)}
           onUpdate={handleUpdateNode}
