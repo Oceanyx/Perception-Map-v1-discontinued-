@@ -1,6 +1,6 @@
 // src/components/CanvasView.jsx
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Plus, Filter, BarChart3, Edit2, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { Plus, Filter, BarChart3, Edit2, ZoomIn, ZoomOut, Maximize2, Hand, MousePointer } from 'lucide-react';
 import NodeDetailPanel from './NodeDetailPanel';
 import Node from './Node';
 import AnalyticsPanel from './AnalyticsPanel';
@@ -38,6 +38,7 @@ export default function CanvasView() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [tool, setTool] = useState('select'); // 'select' or 'hand'
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -57,6 +58,35 @@ export default function CanvasView() {
     }
     loadData();
   }, []);
+
+  // Keyboard shortcut for hand tool
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === ' ' && !e.repeat && tool === 'select') {
+        e.preventDefault();
+        setTool('hand');
+      }
+      if (e.key === 'v' || e.key === 'V') {
+        setTool('select');
+      }
+      if (e.key === 'h' || e.key === 'H') {
+        setTool('hand');
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (e.key === ' ' && tool === 'hand') {
+        setTool('select');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [tool]);
 
   // Zoom with mouse wheel
   useEffect(() => {
@@ -125,7 +155,7 @@ export default function CanvasView() {
   }, [nodes, getDomainBounds]);
 
   const handleDragStart = (e, node) => {
-    if (node.type === 'content') {
+    if (node.type === 'content' && tool === 'select') {
       e.stopPropagation();
       setDraggingNode(node.id);
       const rect = e.currentTarget.getBoundingClientRect();
@@ -158,8 +188,7 @@ export default function CanvasView() {
 
   const handleNodeClick = (node, e) => {
     e.stopPropagation();
-    if (node.type === 'content') {
-      // Force a fresh copy of the node to trigger re-render
+    if (node.type === 'content' && tool === 'select') {
       const freshNode = nodes.find(n => n.id === node.id);
       setSelectedNode(freshNode ? { ...freshNode } : node);
     }
@@ -182,7 +211,6 @@ export default function CanvasView() {
         ? { ...node, data: { ...node.data, ...newData } }
         : node
     ));
-    // Update selected node if it's the one being edited
     setSelectedNode(current => {
       if (current && current.id === nodeId) {
         return { ...current, data: { ...current.data, ...newData } };
@@ -278,10 +306,12 @@ export default function CanvasView() {
     return true;
   });
 
-  // Pan controls - FIXED to allow infinite panning
+  // Pan controls - works with hand tool OR space key
   const handleCanvasMouseDown = (e) => {
-    // Only start panning if clicking directly on the canvas, not on nodes
-    if (e.target === containerRef.current || e.target === canvasRef.current || e.target.tagName === 'svg') {
+    if (tool === 'hand' || e.target === containerRef.current || e.target === canvasRef.current || e.target.tagName === 'svg') {
+      if (tool === 'hand' || (e.target !== containerRef.current && e.target !== canvasRef.current && e.target.tagName !== 'svg')) {
+        return; // Let hand tool work anywhere
+      }
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
       e.preventDefault();
@@ -289,8 +319,16 @@ export default function CanvasView() {
   };
 
   const handleCanvasMouseMove = (e) => {
-    if (isPanning) {
-      setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+    if (isPanning || tool === 'hand') {
+      if (tool === 'hand' && e.buttons === 1) {
+        if (!isPanning) {
+          setIsPanning(true);
+          setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+        }
+      }
+      if (isPanning) {
+        setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+      }
     }
   };
 
@@ -304,6 +342,12 @@ export default function CanvasView() {
   const handleResetView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
+  };
+
+  // Get cursor based on tool
+  const getCursor = () => {
+    if (tool === 'hand') return isPanning ? 'grabbing' : 'grab';
+    return isPanning ? 'grabbing' : 'default';
   };
 
   return (
@@ -527,7 +571,53 @@ export default function CanvasView() {
         </div>
       )}
 
-      {/* Zoom Controls */}
+      {/* Tool Selector - Bottom Left */}
+      <div style={{
+        position: 'absolute',
+        bottom: '20px',
+        left: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        zIndex: 100
+      }}>
+        <button
+          onClick={() => setTool('select')}
+          style={{
+            padding: '10px',
+            background: tool === 'select' ? '#6C63FF' : '#1E293B',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '8px',
+            color: '#E6EEF8',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          title="Select Tool (V)"
+        >
+          <MousePointer size={20} />
+        </button>
+        <button
+          onClick={() => setTool('hand')}
+          style={{
+            padding: '10px',
+            background: tool === 'hand' ? '#6C63FF' : '#1E293B',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '8px',
+            color: '#E6EEF8',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          title="Hand Tool (H or Space)"
+        >
+          <Hand size={20} />
+        </button>
+      </div>
+
+      {/* Zoom Controls - Bottom Right */}
       <div style={{
         position: 'absolute',
         bottom: '20px',
@@ -601,7 +691,7 @@ export default function CanvasView() {
         </div>
       </div>
 
-      {/* Canvas - FIXED for infinite panning */}
+      {/* Canvas */}
       <div 
         ref={containerRef}
         onMouseDown={handleCanvasMouseDown}
@@ -611,7 +701,7 @@ export default function CanvasView() {
         style={{ 
           flex: 1,
           position: 'relative',
-          cursor: isPanning ? 'grabbing' : 'default',
+          cursor: getCursor(),
           overflow: 'hidden',
           userSelect: 'none'
         }}
@@ -693,7 +783,8 @@ export default function CanvasView() {
                 style={{
                   position: 'absolute',
                   left: node.position.x + 5000,
-                  top: node.position.y + 5000
+                  top: node.position.y + 5000,
+                  pointerEvents: tool === 'hand' ? 'none' : 'auto'
                 }}
               >
                 <Node
@@ -744,7 +835,7 @@ export default function CanvasView() {
           onClose={() => setShowLensManager(false)}
           onUpdate={handleUpdateLenses}
         />
-      )}
+        )}
     </div>
   );
 }

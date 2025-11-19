@@ -41,7 +41,6 @@ export default function NodeDetailPanel({ node, onClose, onUpdate, onDelete, len
   };
 
   const handleSave = () => {
-    // Ensure at least one lens is selected
     if (formData.lensIds.length === 0) {
       alert('Please select at least one lens');
       return;
@@ -77,7 +76,7 @@ export default function NodeDetailPanel({ node, onClose, onUpdate, onDelete, len
     <div style={{
       position: 'fixed',
       right: 0,
-      top: '60px',
+      top: '100px',
       bottom: 0,
       width: '420px',
       background: '#0F1724',
