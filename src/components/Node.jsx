@@ -24,8 +24,8 @@ export default function Node({ node, onDragStart, onDragEnd, onClick, onHover, o
       <div
         style={{
           position: 'absolute',
-          left: node.position.x,
-          top: node.position.y,
+          left: 0,
+          top: 0,
           width: node.width,
           height: node.width,
           borderRadius: '50%',
@@ -109,22 +109,6 @@ export default function Node({ node, onDragStart, onDragEnd, onClick, onHover, o
         gap: '4px',
         zIndex: 10
       }}>
-        {node.data.mode && (
-          <div style={{
-            padding: '2px 6px',
-            background: '#1E293B',
-            borderRadius: '4px',
-            fontSize: '11px',
-            border: '1px solid rgba(255,255,255,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '3px'
-          }}>
-            <span>{modeIcons[node.data.mode]}</span>
-            <span style={{ color: '#94A3B8', textTransform: 'capitalize' }}>{node.data.mode}</span>
-          </div>
-        )}
-        
         {lensIds?.map(lensId => {
           const lens = lenses.find(l => l.id === lensId);
           return lens ? (

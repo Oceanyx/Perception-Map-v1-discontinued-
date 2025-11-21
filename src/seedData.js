@@ -212,7 +212,7 @@ export const seedNodes = [
   {
     id: "d-private",
     type: "domain",
-    position: { x: 100, y: 150 },
+    position: { x: -200, y: -200 },  
     width: 600,
     height: 600,
     data: { label: "Private", domainId: "private" }
@@ -220,7 +220,7 @@ export const seedNodes = [
   {
     id: "d-public",
     type: "domain",
-    position: { x: 450, y: 150 },
+    position: { x: 500, y: -200 }, 
     width: 600,
     height: 600,
     data: { label: "Public", domainId: "public" }
@@ -228,7 +228,7 @@ export const seedNodes = [
   {
     id: "d-abstract",
     type: "domain",
-    position: { x: 275, y: 430 },
+    position: { x: 150, y: 300 }, 
     width: 600,
     height: 600,
     data: { label: "Abstract", domainId: "abstract" }

@@ -5,7 +5,7 @@ import NodeDetailPanel from './NodeDetailPanel';
 import Node from './Node';
 import AnalyticsPanel from './AnalyticsPanel';
 import LensManager from './LensManager';
-import { domainColors, defaultLenses, modes, predefinedMetaTags } from '../seedData';
+import { domainColors, defaultLenses, modes, predefinedMetaTags, connectionTypes} from '../seedData';
 import { 
   db, 
   initializeDB, 
@@ -62,20 +62,25 @@ export default function CanvasView() {
 
   // Initialize database and load data
   useEffect(() => {
-    async function loadData() {
-      await initializeDB();
-      const loadedNodes = await getAllNodes();
-      const loadedEdges = await getAllEdges();
-      const loadedLenses = await getAllLenses();
-      
-      setNodes(loadedNodes);
-      setEdges(loadedEdges);
-      if (loadedLenses.length > 0) {
-        setLenses(loadedLenses);
-      }
+  async function loadData() {
+    await initializeDB();
+    const loadedNodes = await getAllNodes();
+    const loadedEdges = await getAllEdges();
+    const loadedLenses = await getAllLenses();
+    
+    /*console.log('Loaded nodes:', loadedNodes);
+    console.log('Loaded edges:', loadedEdges);
+    console.log('Loaded lenses:', loadedLenses);
+    */
+    
+    setNodes(loadedNodes);
+    setEdges(loadedEdges);
+    if (loadedLenses.length > 0) {
+      setLenses(loadedLenses);
     }
-    loadData();
-  }, []);
+  }
+  loadData();
+}, []);
 
   // Keyboard shortcut for hand tool
   useEffect(() => {
@@ -843,13 +848,14 @@ export default function CanvasView() {
               })}
             </svg>
 
+            {console.log('Filtered nodes:', filteredNodes.map(n => ({ id: n.id, type: n.type, position: n.position })))}
             {filteredNodes.map(node => (
               <div
                 key={node.id}
                 style={{
                   position: 'absolute',
-                  left: node.position.x + 5000,
-                  top: node.position.y + 5000,
+                  left: node.position.x,
+                  top: node.position.y,
                   pointerEvents: tool === 'hand' ? 'none' : 'auto'
                 }}
               >

@@ -49,12 +49,11 @@ export default function NodeDetailPanel({
 
   const toggleLens = (lensId) => setFormData(prev => ({ ...prev, lensIds: prev.lensIds.includes(lensId) ? prev.lensIds.filter(id => id !== lensId) : [...prev.lensIds, lensId] }));
 
-  const toggleDomain = (domainId) => setFormData(prev => {
-    const has = prev.domainIds.includes(domainId);
-    if (has) return { ...prev, domainIds: prev.domainIds.filter(id => id !== domainId) };
-    if (prev.domainIds.length >= 2) { alert('Maximum 2 domains per node.'); return prev; }
-    return { ...prev, domainIds: [...prev.domainIds, domainId] };
-  });
+const toggleDomain = (domainId) => setFormData(prev => {
+  const has = prev.domainIds.includes(domainId);
+  if (has) return { ...prev, domainIds: [] }; // Unselect if clicking the same one
+  return { ...prev, domainIds: [domainId] }; // Replace with new selection
+});
 
   const addMetaTag = (tag) => {
     if (!formData.metaTags.includes(tag)) {
@@ -121,7 +120,6 @@ export default function NodeDetailPanel({
     );
   };
 
-  const currentMode = modes.find(m => m.id === formData.mode);
   const currentAgency = agencyStates.find(a => a.id === formData.agencyOrientation);
 
   const getGuidanceQuestions = () => {
@@ -179,11 +177,6 @@ export default function NodeDetailPanel({
       <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <input value={formData.title} onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))} placeholder="Node title..." style={{ fontSize: '18px', fontWeight: 600, background: 'transparent', border: 'none', color: '#E6EEF8', outline: 'none', minWidth: '140px' }} />
-          {currentMode && (
-            <select value={formData.mode} onChange={e => setFormData(prev => ({ ...prev, mode: e.target.value }))} style={{ padding: '5px 10px', background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '999px', fontSize: '12px', color: '#C7D2FE', cursor: 'pointer' }}>
-              {modes.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-          )}
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button onClick={() => setShowGuidance(prev => !prev)} style={{ background: showGuidance ? '#6C63FF' : 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: showGuidance ? '#fff' : '#94A3B8', padding: '6px 10px', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -198,20 +191,6 @@ export default function NodeDetailPanel({
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '18px' }}>
         
-
-        {/* Guidance Panel */}
-        {showGuidance && (
-          <div style={{ marginBottom: '16px', padding: '14px', background: '#0B1220', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
-              {['quick', 'deep', 'experiments'].map(level => (
-                <button key={level} onClick={() => setGuidanceLevel(level)} style={{ padding: '6px 12px', background: guidanceLevel === level ? '#6C63FF' : '#1E293B', border: `1px solid ${guidanceLevel === level ? '#6C63FF' : 'rgba(148, 163, 184, 0.2)'}`, borderRadius: '6px', color: '#E6EEF8', cursor: 'pointer', fontSize: '13px', textTransform: 'capitalize', transition: 'all 0.15s' }}>{level}</button>
-              ))}
-            </div>
-            <ul style={{ margin: 0, paddingLeft: '20px', color: '#CBD5E1', fontSize: '13px', lineHeight: '1.7' }}>
-              {guidanceQuestions[guidanceLevel]?.slice(0, 5).map((q, i) => <li key={i} style={{ marginBottom: '8px' }}>{q}</li>)}
-            </ul>
-          </div>
-        )}
         {/* Configuration Section - At Top */}
         <div style={{ ...sectionStyle, background: '#0B1220', border: '1px solid rgba(255,255,255,0.04)', marginBottom: '18px' }}>
           <h3 style={{ margin: '0 0 14px 0', fontSize: '15px', fontWeight: 600, color: '#E6EEF8' }}>Configuration</h3>
@@ -232,6 +211,20 @@ export default function NodeDetailPanel({
             </div>
           </div>
         </div>
+        {/* Guidance Panel */}
+        {showGuidance && (
+          <div style={{ marginBottom: '16px', padding: '14px', background: '#0B1220', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+              {['quick', 'deep', 'experiments'].map(level => (
+                <button key={level} onClick={() => setGuidanceLevel(level)} style={{ padding: '6px 12px', background: guidanceLevel === level ? '#6C63FF' : '#1E293B', border: `1px solid ${guidanceLevel === level ? '#6C63FF' : 'rgba(148, 163, 184, 0.2)'}`, borderRadius: '6px', color: '#E6EEF8', cursor: 'pointer', fontSize: '13px', textTransform: 'capitalize', transition: 'all 0.15s' }}>{level}</button>
+              ))}
+            </div>
+            <ul style={{ margin: 0, paddingLeft: '20px', color: '#CBD5E1', fontSize: '13px', lineHeight: '1.7' }}>
+              {guidanceQuestions[guidanceLevel]?.slice(0, 5).map((q, i) => <li key={i} style={{ marginBottom: '8px' }}>{q}</li>)}
+            </ul>
+          </div>
+        )}
+        
         {/* OBSERVATION SECTION */}
         <div style={observationBg}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
