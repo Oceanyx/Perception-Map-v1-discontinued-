@@ -4,9 +4,9 @@ import { domainColors, patternTypes, agencyStates, predefinedMetaTags, metaPatte
 import { Plus, Trash2, HelpCircle, MessageSquare, Eye, Lightbulb, RefreshCw, Clock } from 'lucide-react';
 
 export default function NodeDetailPanel({
-  node, onClose, onUpdate, onDelete, lenses, edges, nodes, onDeleteEdge, onCreateEdge,
+  node, onClose, onUpdate, onDelete, lenses, edges, nodes, onDeleteEdge, onCreateEdge, onUpdateEdge,
   recentMetaTags = [], onAddRecentMetaTag = () => {}
-}) 
+})
 
 {
   const [formData, setFormData] = useState({
@@ -103,6 +103,14 @@ const toggleDomain = (domainId) => setFormData(prev => {
       setShowAddConnection(false);
     }
   };
+
+const handleUpdateEdge = async (edgeId, updates) => {
+  if (onUpdateEdge) {
+    await onUpdateEdge(edgeId, updates);
+    // Give it a moment for the parent to update
+    setTimeout(() => setEditingEdgeId(null), 100);
+  }
+};
 
   const HelpTooltip = ({ children }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -465,7 +473,7 @@ const toggleDomain = (domainId) => setFormData(prev => {
                         <label style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '4px', display: 'block' }}>Type</label>
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                           {connectionTypes.map(ct => (
-                            <button key={ct.id} onClick={() => onUpdateEdge(edge.id, { type: ct.id })} style={{ padding: '4px 8px', background: edge.type === ct.id ? ct.color : '#1E293B', border: `1px solid ${edge.type === ct.id ? ct.color : 'rgba(148, 163, 184, 0.15)'}`, borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '11px' }}>{ct.name}</button>
+                            <button key={ct.id} onClick={() => handleUpdateEdge(edge.id, { type: ct.id })} style={{ padding: '4px 8px', background: edge.type === ct.id ? ct.color : '#1E293B', border: `1px solid ${edge.type === ct.id ? ct.color : 'rgba(148, 163, 184, 0.15)'}`, borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '11px' }}>{ct.name}</button>
                           ))}
                         </div>
                       </div>

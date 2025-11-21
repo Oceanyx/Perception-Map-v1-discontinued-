@@ -16,6 +16,7 @@ import {
   updateNode as dbUpdateNode,
   deleteNode as dbDeleteNode,
   addEdge,
+  updateEdge,
   deleteEdge as dbDeleteEdge,
   updateLenses as dbUpdateLenses
 } from '../lib/db';
@@ -34,8 +35,8 @@ export default function CanvasView() {
   const [showFilters, setShowFilters] = useState(false);
   const [showLensManager, setShowLensManager] = useState(false);
   const [viewMode, setViewMode] = useState('all');
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(0.8);
+  const [pan, setPan] = useState({ x: 400, y: 200 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [tool, setTool] = useState('select'); // 'select' or 'hand'
@@ -258,6 +259,11 @@ export default function CanvasView() {
     setEdges(current => current.filter(e => e.id !== edgeId));
   }, []);
 
+  const handleUpdateEdge = useCallback(async (edgeId, updates) => {
+    await updateEdge(edgeId, updates);
+    setEdges(current => current.map(e => e.id === edgeId ? { ...e, ...updates } : e));
+  }, []);
+
   const handleUpdateLenses = useCallback(async (newLenses) => {
     await dbUpdateLenses(newLenses);
     setLenses(newLenses);
@@ -373,8 +379,8 @@ export default function CanvasView() {
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 0.3));
   const handleResetView = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+    setZoom(0.8);
+    setPan({ x: 400, y: 200 });
   };
 
   // Get cursor based on tool
@@ -890,6 +896,7 @@ export default function CanvasView() {
           nodes={nodes}
           onDeleteEdge={handleDeleteEdge}
           onCreateEdge={handleCreateEdge}
+          onUpdateEdge={handleUpdateEdge}
           recentMetaTags={recentMetaTags}
           onAddRecentMetaTag={addRecentMetaTag}
         />
