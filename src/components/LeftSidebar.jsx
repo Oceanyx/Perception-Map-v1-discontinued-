@@ -18,13 +18,13 @@ export default function LeftSidebar({
   const [hoveredIcon, setHoveredIcon] = useState(null);
 
 const iconButtons = [
-    { id: 'import', icon: Upload, label: 'Import Map', action: onImport, color: '#10B981' },
-    { id: 'export-json', icon: FileJson, label: 'Export JSON', action: onExportJSON, color: '#6C63FF' },
-    { id: 'export-png', icon: Camera, label: 'Export PNG', action: onExportPNG, color: '#A78BFA' },
-    { id: 'purpose', icon: Target, label: 'View Purpose', action: onShowPurpose, color: '#F59E0B' },
-    { id: 'legend', icon: Map, label: 'Legend', action: onShowLegend, color: '#4D9FFF' },
-    { id: 'website', icon: ExternalLink, label: 'Visit Oceanyx.dev', action: () => window.open('https://oceanyx.github.io', '_blank'), color: '#88CCFF' },
-    { id: 'kofi', icon: Coffee, label: 'Support on Ko-fi', action: () => window.open('https://ko-fi.com/oceanyx', '_blank'), color: '#FF5E5B' }
+    { id: 'import', icon: Upload, label: 'Import Map', action: onImport, color: '#10B981', hoverBg: 'rgba(16, 185, 129, 0.2)' },
+    { id: 'export-json', icon: FileJson, label: 'Export JSON', action: onExportJSON, color: '#6C63FF', hoverBg: 'rgba(108, 99, 255, 0.2)' },
+    { id: 'export-png', icon: Camera, label: 'Export PNG', action: onExportPNG, color: '#A78BFA', hoverBg: 'rgba(167, 139, 250, 0.2)' },
+    { id: 'purpose', icon: Target, label: 'View Purpose', action: onShowPurpose, color: '#F59E0B', hoverBg: 'rgba(245, 158, 11, 0.2)' },
+    { id: 'legend', icon: Map, label: 'Legend', action: onShowLegend, color: '#4D9FFF', hoverBg: 'rgba(77, 159, 255, 0.2)' },
+    { id: 'website', icon: ExternalLink, label: 'Visit Oceanyx.dev', action: () => window.open('https://oceanyx.github.io', '_blank'), color: '#88CCFF', hoverBg: 'rgba(136, 204, 255, 0.2)' },
+    { id: 'kofi', icon: Coffee, label: 'Support on Ko-fi', action: () => window.open('https://ko-fi.com/oceanyx', '_blank'), color: '#FF5E5B', hoverBg: 'rgba(255, 94, 91, 0.2)' }
   ];
 
   const toolButtons = [
@@ -58,20 +58,21 @@ return (
                 onMouseLeave={() => setHoveredIcon(null)}
                 style={{
                   padding: '10px',
-                  background: '#1E293B',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: isHovered ? btn.hoverBg : '#1E293B',
+                  border: `1px solid ${isHovered ? btn.color + '60' : 'rgba(255,255,255,0.1)'}`,
                   borderRadius: '8px',
                   color: '#E6EEF8',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  boxShadow: isHovered ? `0 4px 12px ${btn.color}40` : 'none'
                 }}
               >
                 <Icon size={20} color={isHovered ? btn.color : '#E6EEF8'} />
               </button>
-              
+                            
               {isHovered && (
                 <div style={{
                   position: 'absolute',

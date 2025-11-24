@@ -1,6 +1,6 @@
 // src/components/CanvasView.jsx
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Plus, Filter, BarChart3, Edit2, ZoomIn, ZoomOut, Maximize2, Hand, MousePointer } from 'lucide-react';
+import { Plus, Filter, BarChart3, Edit2, ZoomIn, ZoomOut, Maximize2, Hand, MousePointer, Github, Linkedin, Mail, Coffee } from 'lucide-react';
 import NodeDetailPanel from './NodeDetailPanel';
 import Node from './Node';
 import AnalyticsPanel from './AnalyticsPanel';
@@ -38,9 +38,10 @@ export default function CanvasView({purposeData}) {
   const [edges, setEdges] = useState([]);
   const [lenses, setLenses] = useState(defaultLenses);
   const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [showLensDropdown, setShowLensDropdown] = useState(false);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [activeLensIds, setActiveLensIds] = useState([]);
-  const [activeFilters, setActiveFilters] = useState({ domains: [], modes: [] });
+  const [activeFilters, setActiveFilters] = useState({ domains: [], lenses: [] });
   const [draggingNode, setDraggingNode] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -52,6 +53,17 @@ export default function CanvasView({purposeData}) {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [tool, setTool] = useState('select'); // 'select' or 'hand'
+  const [theme, setTheme] = useState(() => {
+    // Check localStorage for saved preference
+    const saved = localStorage.getItem('chroma-theme');
+    return saved || 'dark';
+  });
+
+  // Save theme preference when it changes
+  useEffect(() => {
+    localStorage.setItem('chroma-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
@@ -467,250 +479,6 @@ const handleUpdateEdge = useCallback(async (edgeId, updates) => {
     URL.revokeObjectURL(url);
   };
 
-  // const handleExportPNG = () => {
-  //   const originalText = 'Export PNG';
-  //   const container = containerRef.current;
-  //   const canvas = canvasRef.current;
-  //   if (!container || !canvas) return;
-
-  //   // Create offscreen canvas
-  //   const exportCanvas = document.createElement('canvas');
-  //   const ctx = exportCanvas.getContext('2d');
-    
-  //   // Set canvas size to viewport
-  //   exportCanvas.width = container.offsetWidth;
-  //   exportCanvas.height = container.offsetHeight;
-    
-  //   // Fill background
-  //   ctx.fillStyle = '#0F1724';
-  //   ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-    
-  //   // Draw grid pattern
-  //   ctx.save();
-  //   const gridSize = 20 * zoom;
-  //   const offsetX = pan.x % gridSize;
-  //   const offsetY = pan.y % gridSize;
-    
-  //   ctx.fillStyle = 'rgba(30, 41, 59, 0.5)';
-  //   for (let x = offsetX; x < exportCanvas.width; x += gridSize) {
-  //     for (let y = offsetY; y < exportCanvas.height; y += gridSize) {
-  //       ctx.beginPath();
-  //       ctx.arc(x, y, 1, 0, Math.PI * 2);
-  //       ctx.fill();
-  //     }
-  //   }
-  //   ctx.restore();
-    
-  //   // Draw edges
-  //   ctx.save();
-  //   edges.forEach(edge => {
-  //     const source = filteredNodes.find(n => n.id === edge.source);
-  //     const target = filteredNodes.find(n => n.id === edge.target);
-  //     if (!source || !target) return;
-      
-  //     const start = getNodeCenter(source);
-  //     const end = getNodeCenter(target);
-  //     const connType = connectionTypes.find(c => c.id === edge.type) || connectionTypes[0];
-      
-  //     const screenStartX = start.x * zoom + pan.x;
-  //     const screenStartY = start.y * zoom + pan.y;
-  //     const screenEndX = end.x * zoom + pan.x;
-  //     const screenEndY = end.y * zoom + pan.y;
-      
-  //     ctx.strokeStyle = connType.color;
-  //     ctx.lineWidth = 2;
-  //     ctx.globalAlpha = 0.8;
-      
-  //     if (connType.strokeDasharray && connType.strokeDasharray !== 'none') {
-  //       const dashArray = connType.strokeDasharray.split(',').map(n => parseInt(n));
-  //       ctx.setLineDash(dashArray);
-  //     } else {
-  //       ctx.setLineDash([]);
-  //     }
-      
-  //     ctx.beginPath();
-  //     ctx.moveTo(screenStartX, screenStartY);
-  //     ctx.lineTo(screenEndX, screenEndY);
-  //     ctx.stroke();
-      
-  //     // Draw arrow if needed
-  //     if (connType.arrow) {
-  //       const angle = Math.atan2(screenEndY - screenStartY, screenEndX - screenStartX);
-  //       const arrowSize = 8;
-  //       ctx.fillStyle = connType.color;
-  //       ctx.beginPath();
-  //       ctx.moveTo(screenEndX, screenEndY);
-  //       ctx.lineTo(
-  //         screenEndX - arrowSize * Math.cos(angle - Math.PI / 6),
-  //         screenEndY - arrowSize * Math.sin(angle - Math.PI / 6)
-  //       );
-  //       ctx.lineTo(
-  //         screenEndX - arrowSize * Math.cos(angle + Math.PI / 6),
-  //         screenEndY - arrowSize * Math.sin(angle + Math.PI / 6)
-  //       );
-  //       ctx.closePath();
-  //       ctx.fill();
-  //     }
-      
-  //     // Draw label
-  //     if (edge.label || connType.name) {
-  //       const label = edge.label && edge.label !== connType.name ? edge.label : connType.name;
-  //       const midX = (screenStartX + screenEndX) / 2;
-  //       const midY = (screenStartY + screenEndY) / 2;
-        
-  //       ctx.font = '14px Inter, sans-serif';
-  //       ctx.fillStyle = connType.color;
-  //       ctx.textAlign = 'center';
-  //       ctx.textBaseline = 'bottom';
-  //       ctx.fillText(label, midX, midY - 5);
-  //     }
-  //   });
-  //   ctx.restore();
-  //   // Reset alpha for nodes
-  //   ctx.globalAlpha = 1;
-  //   ctx.setLineDash([]);
-
-  //   // Draw nodes
-  //   ctx.globalAlpha = 1;
-  //   filteredNodes.forEach(node => {
-  //     ctx.globalAlpha = 1; // Reset for each node
-  //     const screenX = node.position.x * zoom + pan.x;
-  //     const screenY = node.position.y * zoom + pan.y;
-      
-  //     if (node.type === 'domain') {
-  //       // Draw domain circle
-  //       const radius = (node.width / 2) * zoom;
-  //       const color = domainColors[node.data.domainId];
-        
-  //       ctx.save();
-  //       ctx.globalAlpha = 0.18;
-  //       ctx.fillStyle = color;
-  //       ctx.beginPath();
-  //       ctx.arc(screenX + radius, screenY + radius, radius, 0, Math.PI * 2);
-  //       ctx.fill();
-  //       ctx.restore();
-        
-  //       ctx.strokeStyle = color;
-  //       ctx.lineWidth = 2;
-  //       ctx.globalAlpha = 0.4;
-  //       ctx.setLineDash([5, 5]);
-  //       ctx.beginPath();
-  //       ctx.arc(screenX + radius, screenY + radius, radius, 0, Math.PI * 2);
-  //       ctx.stroke();
-  //       ctx.setLineDash([]);
-        
-  //       // Draw domain label
-  //       ctx.globalAlpha = 1;
-  //       ctx.font = `bold ${18 * zoom}px Inter, sans-serif`;
-  //       ctx.fillStyle = color;
-  //       ctx.textAlign = 'center';
-  //       ctx.textBaseline = 'middle';
-  //       ctx.fillText(node.data.label.toUpperCase(), screenX + radius, screenY + radius);
-  //     } else {
-  //       // Draw content node
-  //       const width = 210 * zoom;
-  //       const height = 80 * zoom;
-        
-  //       // Background with gradient
-  //       const domainIds = node.data?.domainIds || [];
-  //       if (domainIds.length > 0) {
-  //         const gradient = ctx.createLinearGradient(screenX, screenY, screenX + width, screenY + height);
-  //         if (domainIds.length === 1) {
-  //           const color = domainColors[domainIds[0]];
-  //           gradient.addColorStop(0, `${color}25`);
-  //           gradient.addColorStop(1, `${color}15`);
-  //         } else if (domainIds.length >= 2) {
-  //           gradient.addColorStop(0, `${domainColors[domainIds[0]]}25`);
-  //           gradient.addColorStop(1, `${domainColors[domainIds[1]]}25`);
-  //         }
-  //         ctx.fillStyle = gradient;
-  //       } else {
-  //         ctx.fillStyle = '#1E293B';
-  //       }
-        
-  //       ctx.beginRadius = 12 * zoom;
-  //       roundRect(ctx, screenX, screenY, width, height, 12 * zoom);
-  //       ctx.fill();
-        
-  //       // Border
-  //       ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-  //       ctx.lineWidth = 1;
-  //       roundRect(ctx, screenX, screenY, width, height, 12 * zoom);
-  //       ctx.stroke();
-        
-  //       // Lens badges
-  //       const lensIds = node.data?.lensIds || [];
-  //       let badgeX = screenX + 8 * zoom;
-  //       const badgeY = screenY - 8 * zoom;
-  //       lensIds.forEach(lensId => {
-  //         const lens = lenses.find(l => l.id === lensId);
-  //         if (lens) {
-  //           ctx.fillStyle = lens.color;
-  //           roundRect(ctx, badgeX, badgeY, 60 * zoom, 16 * zoom, 4 * zoom);
-  //           ctx.fill();
-            
-  //           ctx.font = `${11 * zoom}px Inter, sans-serif`;
-  //           ctx.fillStyle = '#fff';
-  //           ctx.textAlign = 'left';
-  //           ctx.textBaseline = 'top';
-  //           ctx.fillText(lens.name, badgeX + 6 * zoom, badgeY + 3 * zoom);
-            
-  //           badgeX += 65 * zoom;
-  //         }
-  //       });
-        
-  //       // Title
-  //       ctx.font = `${14 * zoom}px Inter, sans-serif`;
-  //       ctx.fillStyle = '#E6EEF8';
-  //       ctx.textAlign = 'left';
-  //       ctx.textBaseline = 'top';
-  //       const title = node.data.title || 'Untitled';
-  //       ctx.fillText(title, screenX + 12 * zoom, screenY + 16 * zoom);
-        
-  //       // Body preview (if exists)
-  //       if (node.data.perceivedPattern) {
-  //         ctx.font = `${12 * zoom}px Inter, sans-serif`;
-  //         ctx.fillStyle = '#94A3B8';
-  //         const preview = node.data.perceivedPattern.substring(0, 40) + '...';
-  //         ctx.fillText(preview, screenX + 12 * zoom, screenY + 40 * zoom);
-  //       }
-  //     }
-  //   });
-    
-  //   // Helper function for rounded rectangles
-  //   function roundRect(ctx, x, y, width, height, radius) {
-  //     ctx.beginPath();
-  //     ctx.moveTo(x + radius, y);
-  //     ctx.lineTo(x + width - radius, y);
-  //     ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-  //     ctx.lineTo(x + width, y + height - radius);
-  //     ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  //     ctx.lineTo(x + radius, y + height);
-  //     ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-  //     ctx.lineTo(x, y + radius);
-  //     ctx.quadraticCurveTo(x, y, x + radius, y);
-  //     ctx.closePath();
-  //   }
-    
-  //   // Export as PNG
-  //   exportCanvas.toBlob((blob) => {
-  //     if (!blob) {
-  //       alert('Failed to create image');
-  //       return;
-  //     }
-      
-  //     const url = URL.createObjectURL(blob);
-  //     const a = document.createElement('a');
-  //     a.href = url;
-  //     a.download = `perception-map-${purposeData?.title.replace(/\s+/g, '-').toLowerCase() || 'untitled'}-${Date.now()}.png`;
-  //     document.body.appendChild(a); // Add to DOM
-  //     a.click();
-  //     document.body.removeChild(a); // Remove from DOM
-      
-  //     // Clean up after a delay
-  //     setTimeout(() => URL.revokeObjectURL(url), 100);
-  //   }, 'image/png', 0.95); // 95% quality
-  // };
   const handleExportPNG = async () => {
     // Load html2canvas dynamically
     if (!window.html2canvas) {
@@ -826,8 +594,11 @@ const handleUpdateEdge = useCallback(async (edgeId, updates) => {
       if (!hasMatchingDomain) return false;
     }
 
-    if (activeFilters.modes.length > 0) {
-      if (!activeFilters.modes.includes(node.data.mode)) return false;
+    if (activeFilters.lenses && activeFilters.lenses.length > 0) {
+      const hasMatchingLens = activeFilters.lenses.some(l => 
+        node.data.lensIds?.includes(l)
+      );
+      if (!hasMatchingLens) return false;
     }
 
     return true;
@@ -932,15 +703,49 @@ const handleUpdateEdge = useCallback(async (edgeId, updates) => {
   height: '60px',
   background: 'linear-gradient(180deg, #1E293B 0%, #1A2332 100%)',
   borderBottom: '1px solid rgba(108, 99, 255, 0.2)',
-  display: 'flex',
+  display: 'grid',
+  gridTemplateColumns: 'auto 1fr auto',
   alignItems: 'center',
-  justifyContent: 'space-between',
   padding: '0 24px',
+  gap: '24px',
   zIndex: 100,
   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
 }}>
-  {/* Left: Title */}
-  <div style={{ flex: '0 0 250px' }}>
+  {/* Left: Logo + Brand */}
+  <div style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '16px'
+  }}>
+    <img 
+      src="/logo.PNG"
+      alt="Chroma Logo" 
+      style={{
+        width: '36px',
+        height: '36px',
+        filter: 'drop-shadow(0 2px 6px rgba(108, 99, 255, 0.4))'
+      }}
+    />
+    <h1 style={{
+      margin: 0,
+      fontSize: '20px',
+      fontWeight: 700,
+      background: 'linear-gradient(135deg, #6C63FF 0%, #4D9FFF 50%, #A78BFA 100%)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      letterSpacing: '-0.3px'
+    }}>
+      Chroma
+    </h1>
+  </div>
+
+  {/* Center: Purpose Title */}
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
+  }}>
     {isEditingTitle ? (
       <input
         value={editedTitle}
@@ -961,7 +766,7 @@ const handleUpdateEdge = useCallback(async (edgeId, updates) => {
         }}
         autoFocus
         style={{
-          fontSize: '16px',
+          fontSize: '15px',
           fontWeight: 600,
           background: 'rgba(30, 41, 59, 0.6)',
           border: '1px solid rgba(108, 99, 255, 0.5)',
@@ -969,19 +774,20 @@ const handleUpdateEdge = useCallback(async (edgeId, updates) => {
           color: '#E6EEF8',
           padding: '8px 12px',
           outline: 'none',
-          width: '100%',
-          boxSizing: 'border-box'
+          maxWidth: '280px',
+          boxSizing: 'border-box',
+          textAlign: 'center'
         }}
       />
     ) : (
-      <h1 
+      <h2 
         onClick={() => {
           setEditedTitle(mapTitle);
           setIsEditingTitle(true);
         }}
         style={{
           margin: 0,
-          fontSize: '16px',
+          fontSize: '15px',
           fontWeight: 600,
           color: '#E6EEF8',
           cursor: 'pointer',
@@ -990,152 +796,173 @@ const handleUpdateEdge = useCallback(async (edgeId, updates) => {
           transition: 'all 0.2s',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
-          textOverflow: 'ellipsis'
+          textOverflow: 'ellipsis',
+          maxWidth: '280px'
         }}
         onMouseEnter={(e) => {
           e.target.style.background = 'rgba(108, 99, 255, 0.15)';
-          e.target.style.transform = 'translateX(2px)';
         }}
         onMouseLeave={(e) => {
           e.target.style.background = 'transparent';
-          e.target.style.transform = 'translateX(0)';
         }}
       >
         {mapTitle}
-      </h1>
+      </h2>
     )}
   </div>
 
-  {/* Center: Domain Selector */}
-  <div style={{
-    flex: '0 0 auto',
-    display: 'flex',
-    gap: '6px',
-    padding: '6px',
-    background: 'rgba(15, 23, 36, 0.6)',
-    borderRadius: '10px',
-    border: '1px solid rgba(255, 255, 255, 0.08)'
+  {/* Right: Domains + Lenses + Tools */}
+  <div style={{ 
+    display: 'flex', 
+    gap: '12px', 
+    alignItems: 'center',
+    justifyContent: 'flex-end'
   }}>
-    {['all', 'private', 'public', 'abstract'].map(mode => (
+    {/* Domains with sliding indicator */}
+<div style={{
+  position: 'relative',
+  display: 'flex',
+  gap: '4px',
+  padding: '4px',
+  background: 'rgba(15, 23, 36, 0.6)',
+  borderRadius: '10px',
+  border: '1px solid rgba(255, 255, 255, 0.08)'
+}}>
+  {/* Sliding indicator background */}
+  {(() => {
+    const activeMode = focusedDomain || viewMode;
+    const modes = ['all', 'private', 'public', 'abstract'];
+    const activeIndex = modes.indexOf(activeMode);
+    
+    return (
+      <div style={{
+        position: 'absolute',
+        top: '4px',
+        left: `${4 + activeIndex * 76}px`,
+        width: '72px',
+        height: 'calc(100% - 8px)',
+        background: activeMode === 'all' ? '#6C63FF' :
+                   activeMode === 'private' ? domainColors.private :
+                   activeMode === 'public' ? domainColors.public :
+                   domainColors.abstract,
+        borderRadius: '7px',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        zIndex: 0
+      }} />
+    );
+  })()}
+  
+  {['all', 'private', 'public', 'abstract'].map((mode) => (
+    <button
+      key={mode}
+      onClick={() => {
+        setViewMode(mode);
+        if (mode !== 'all') {
+          handleDomainFocus(mode);
+        } else {
+          setFocusedDomain(null);
+          handleResetView();
+        }
+      }}
+      style={{
+        position: 'relative',
+        zIndex: 1,
+        width: '72px',
+        padding: '8px 0',
+        background: 'transparent',
+        border: 'none',
+        borderRadius: '7px',
+        color: (focusedDomain === mode || (viewMode === mode && !focusedDomain)) ? '#fff' : '#94A3B8',
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: focusedDomain === mode || (viewMode === mode && !focusedDomain) ? 600 : 500,
+        textTransform: 'capitalize',
+        transition: 'color 0.2s',
+        whiteSpace: 'nowrap',
+        textAlign: 'center'
+      }}
+    >
+      {mode === 'all' ? 'All' : mode}
+    </button>
+  ))}
+</div>
+
+    {/* Divider */}
+    <div style={{ width: '1px', height: '32px', background: 'rgba(255, 255, 255, 0.1)' }} />
+
+    {/* Lens Selector */}
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
       <button
-        key={mode}
-        onClick={() => {
-          setViewMode(mode);
-          if (mode !== 'all') {
-            handleDomainFocus(mode);
-          } else {
-            setFocusedDomain(null);
-            handleResetView();
-          }
-        }}
+        onClick={() => setShowLensDropdown(!showLensDropdown)}
         style={{
-          padding: '8px 16px',
-          background: focusedDomain === mode || (viewMode === mode && !focusedDomain) 
-            ? (mode === 'all' ? '#6C63FF' : domainColors[mode]) 
-            : 'transparent',
-          border: 'none',
-          borderRadius: '7px',
-          color: focusedDomain === mode || (viewMode === mode && !focusedDomain) 
-            ? (mode === 'all' ? '#fff' : '#0F1724') 
-            : '#94A3B8',
+          padding: '8px 14px',
+          background: 'rgba(15, 23, 36, 0.6)',
+          border: '1px solid rgba(236, 72, 153, 0.3)',
+          borderRadius: '8px',
+          color: '#E6EEF8',
           cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
           fontSize: '13px',
-          fontWeight: focusedDomain === mode || (viewMode === mode && !focusedDomain) ? 600 : 500,
-          textTransform: 'capitalize',
-          transition: 'all 0.2s',
-          whiteSpace: 'nowrap'
+          fontWeight: 700,
+          transition: 'all 0.2s'
         }}
         onMouseEnter={(e) => {
-          if (!(focusedDomain === mode || (viewMode === mode && !focusedDomain))) {
-            e.target.style.background = 'rgba(148, 163, 184, 0.1)';
-          }
+          e.target.style.background = 'rgba(236, 72, 153, 0.15)';
+          e.target.style.borderColor = 'rgba(236, 72, 153, 0.5)';
         }}
         onMouseLeave={(e) => {
-          if (!(focusedDomain === mode || (viewMode === mode && !focusedDomain))) {
-            e.target.style.background = 'transparent';
-          }
+          e.target.style.background = 'rgba(15, 23, 36, 0.6)';
+          e.target.style.borderColor = 'rgba(236, 72, 153, 0.3)';
         }}
       >
-        {mode === 'all' ? 'All' : mode}
+        <span style={{
+          padding: '2px 8px',
+          background: '#EC4899',
+          borderRadius: '4px',
+          fontSize: '11px',
+          fontWeight: 700,
+          color: '#fff'
+        }}>
+          {activeLensIds.length}/{lenses.length}
+        </span>
+        Lenses
       </button>
-    ))}
-  </div>
-
-  {/* Right: Lenses + Tools */}
-  <div style={{ flex: '0 0 auto', display: 'flex', gap: '12px', alignItems: 'center' }}>
-    {/* Lenses Group */}
-    <div style={{
-      display: 'flex',
-      gap: '6px',
-      padding: '6px',
-      background: 'rgba(15, 23, 36, 0.6)',
-      borderRadius: '10px',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
-      alignItems: 'center'
-    }}>
-      {lenses.slice(0, 4).map(lens => (
-        <button
-          key={lens.id}
-          onClick={() => setActiveLensIds(prev => 
-            prev.includes(lens.id) ? prev.filter(id => id !== lens.id) : [...prev, lens.id]
-          )}
-          style={{
-            padding: '6px 12px',
-            background: activeLensIds.includes(lens.id) ? lens.color : 'transparent',
-            border: 'none',
-            borderRadius: '6px',
-            color: activeLensIds.includes(lens.id) ? '#fff' : '#94A3B8',
-            cursor: 'pointer',
-            fontSize: '12px',
-            fontWeight: activeLensIds.includes(lens.id) ? 600 : 500,
-            transition: 'all 0.2s',
-            whiteSpace: 'nowrap'
-          }}
-          onMouseEnter={(e) => {
-            if (!activeLensIds.includes(lens.id)) {
-              e.target.style.background = 'rgba(148, 163, 184, 0.1)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!activeLensIds.includes(lens.id)) {
-              e.target.style.background = 'transparent';
-            }
-          }}
-        >
-          {lens.name}
-        </button>
-      ))}
       
       <button
         onClick={() => setShowLensManager(true)}
         style={{
-          padding: '6px 8px',
-          background: 'transparent',
+          padding: '10px',
+          background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
           border: 'none',
-          borderRadius: '6px',
-          color: '#94A3B8',
+          borderRadius: '8px',
+          color: '#fff',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
-          transition: 'all 0.2s'
+          justifyContent: 'center',
+          transition: 'all 0.2s',
+          boxShadow: '0 2px 8px rgba(236, 72, 153, 0.4)'
         }}
         onMouseEnter={(e) => {
-          e.target.style.background = 'rgba(148, 163, 184, 0.1)';
-          e.target.style.color = '#E6EEF8';
+          e.target.style.transform = 'scale(1.05)';
+          e.target.style.boxShadow = '0 4px 12px rgba(236, 72, 153, 0.6)';
         }}
         onMouseLeave={(e) => {
-          e.target.style.background = 'transparent';
-          e.target.style.color = '#94A3B8';
+          e.target.style.transform = 'scale(1)';
+          e.target.style.boxShadow = '0 2px 8px rgba(236, 72, 153, 0.4)';
         }}
+        title="Manage Lenses"
       >
         <Edit2 size={16} />
       </button>
     </div>
 
     {/* Divider */}
-    <div style={{ width: '1px', height: '24px', background: 'rgba(255, 255, 255, 0.1)' }} />
+    <div style={{ width: '1px', height: '32px', background: 'rgba(255, 255, 255, 0.1)' }} />
 
-    {/* Action Buttons */}
+    {/* Tools */}
     <button
       onClick={() => setShowFilters(!showFilters)}
       style={{
@@ -1238,162 +1065,399 @@ const handleUpdateEdge = useCallback(async (edgeId, updates) => {
         onToolChange={setTool}
       />
 
-{/* Zoom Controls - Bottom Right */}
-      <div style={{
-        position: 'absolute',
-        bottom: '20px',
-        right: '20px',
+{/* Bottom Right Controls */}
+<div style={{
+  position: 'absolute',
+  bottom: '20px',
+  right: '20px',
+  display: 'flex',
+  gap: '12px',
+  alignItems: 'flex-end',
+  zIndex: 100
+}}>
+  {/* Personal Links */}
+  <div style={{
+    display: 'flex',
+    gap: '8px',
+    padding: '10px 12px',
+    background: 'rgba(30, 41, 59, 0.8)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '12px',
+    border: '1px solid rgba(108, 99, 255, 0.2)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+  }}>
+    <a 
+      href="https://github.com/Oceanyx" 
+      target="_blank" 
+      rel="noopener noreferrer"
+      style={{
+        color: '#88CCFF',
+        transition: 'all 0.2s',
         display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-        zIndex: 100
-      }}>
-        <button
-          onClick={handleZoomIn}
-          style={{
-            padding: '10px',
-            background: '#1E293B',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '8px',
-            color: '#E6EEF8',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          title="Zoom In"
-        >
-          <ZoomIn size={20} />
-        </button>
-        <button
-          onClick={handleResetView}
-          style={{
-            padding: '10px',
-            background: '#1E293B',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '8px',
-            color: '#E6EEF8',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          title="Reset View"
-        >
-          <Maximize2 size={20} />
-        </button>
-        <button
-          onClick={handleZoomOut}
-          style={{
-            padding: '10px',
-            background: '#1E293B',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '8px',
-            color: '#E6EEF8',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          title="Zoom Out"
-        >
-          <ZoomOut size={20} />
-        </button>
-        <div style={{
-          padding: '8px',
-          background: '#1E293B',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: '8px',
-          color: '#94A3B8',
-          fontSize: '12px',
-          textAlign: 'center'
-        }}>
-          {Math.round(zoom * 100)}%
-        </div>
-      </div>
+        alignItems: 'center',
+        textDecoration: 'none'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'scale(1.15)';
+        e.currentTarget.style.color = '#C7D2FE';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.color = '#88CCFF';
+      }}
+    >
+      <Github size={20} />
+    </a>
+    <a 
+      href="https://www.linkedin.com/in/oceanyx/" 
+      target="_blank" 
+      rel="noopener noreferrer"
+      style={{
+        color: '#4D9FFF',
+        transition: 'all 0.2s',
+        display: 'flex',
+        alignItems: 'center',
+        textDecoration: 'none'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'scale(1.15)';
+        e.currentTarget.style.color = '#93C5FD';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.color = '#4D9FFF';
+      }}
+    >
+      <Linkedin size={20} />
+    </a>
+    <a 
+      href="mailto:bchanyx@gmail.com"
+      style={{
+        color: '#10B981',
+        transition: 'all 0.2s',
+        display: 'flex',
+        alignItems: 'center',
+        textDecoration: 'none'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'scale(1.15)';
+        e.currentTarget.style.color = '#6EE7B7';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.color = '#10B981';
+      }}
+    >
+      <Mail size={20} />
+    </a>
+    <a 
+      href="https://ko-fi.com/oceanyx" 
+      target="_blank" 
+      rel="noopener noreferrer"
+      style={{
+        color: '#FF5E5B',
+        transition: 'all 0.2s',
+        display: 'flex',
+        alignItems: 'center',
+        textDecoration: 'none'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'scale(1.15)';
+        e.currentTarget.style.color = '#FCA5A5';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.color = '#FF5E5B';
+      }}
+    >
+      <Coffee size={20} />
+    </a>
+  </div>
+
+  {/* New Map Button */}
+  <button
+    onClick={() => {
+      if (window.confirm('Creating a new map will overwrite your current work. Continue?')) {
+        window.location.reload();
+      }
+    }}
+    style={{
+      padding: '12px 16px',
+      background: 'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)',
+      border: 'none',
+      borderRadius: '10px',
+      color: '#fff',
+      cursor: 'pointer',
+      fontSize: '13px',
+      fontWeight: 600,
+      transition: 'all 0.2s',
+      boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
+      whiteSpace: 'nowrap',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px'
+    }}
+    onMouseEnter={(e) => {
+      e.target.style.transform = 'translateY(-2px)';
+      e.target.style.boxShadow = '0 6px 20px rgba(245, 158, 11, 0.5)';
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.transform = 'translateY(0)';
+      e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.4)';
+    }}
+  >
+    <Plus size={16} /> New Map
+  </button>
+
+  {/* Zoom Controls */}
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  }}>
+    <button
+      onClick={handleZoomIn}
+      style={{
+        padding: '10px',
+        background: '#1E293B',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '8px',
+        color: '#E6EEF8',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+      title="Zoom In"
+    >
+      <ZoomIn size={20} />
+    </button>
+    <button
+      onClick={handleResetView}
+      style={{
+        padding: '10px',
+        background: '#1E293B',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '8px',
+        color: '#E6EEF8',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+      title="Reset View"
+    >
+      <Maximize2 size={20} />
+    </button>
+    <button
+      onClick={handleZoomOut}
+      style={{
+        padding: '10px',
+        background: '#1E293B',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '8px',
+        color: '#E6EEF8',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+      title="Zoom Out"
+    >
+      <ZoomOut size={20} />
+    </button>
+    <div style={{
+      padding: '8px',
+      background: '#1E293B',
+      border: '1px solid rgba(255,255,255,0.1)',
+      borderRadius: '8px',
+      color: '#94A3B8',
+      fontSize: '12px',
+      textAlign: 'center'
+    }}>
+      {Math.round(zoom * 100)}%
+    </div>
+  </div>
+</div>
 
       {/* Filters Dropdown */}
-      {showFilters && (
-        <div style={{
-          position: 'absolute',
-          top: '70px',
-          right: '20px',
-          width: '300px',
-          background: '#1E293B',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: '12px',
-          padding: '16px',
-          zIndex: 1001,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
-        }}>
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '8px', fontWeight: 600 }}>
-              Domains
-            </div>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {['private', 'public', 'abstract'].map(domain => (
-                <button
-                  key={domain}
-                  onClick={() => toggleFilter('domains', domain)}
-                  style={{
-                    padding: '6px 12px',
-                    background: activeFilters.domains.includes(domain) ? domainColors[domain] : '#0F1724',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '6px',
-                    color: activeFilters.domains.includes(domain) ? '#000' : '#E6EEF8',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    textTransform: 'capitalize'
-                  }}
-                >
-                  {domain}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '8px', fontWeight: 600 }}>
-              Modes
-            </div>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {modes.map(mode => (
-                <button
-                  key={mode.id}
-                  onClick={() => toggleFilter('modes', mode.id)}
-                  style={{
-                    padding: '6px 12px',
-                    background: activeFilters.modes.includes(mode.id) ? '#6C63FF' : '#0F1724',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '6px',
-                    color: '#E6EEF8',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    textTransform: 'capitalize'
-                  }}
-                >
-                  {mode.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
+{showFilters && (
+  <div style={{
+    position: 'absolute',
+    top: '70px',
+    right: '20px',
+    width: '300px',
+    background: '#1E293B',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '12px',
+    padding: '16px',
+    zIndex: 1001,
+    boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+  }}>
+    <div style={{ marginBottom: '16px' }}>
+      <div style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '8px', fontWeight: 600 }}>
+        Domains
+      </div>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        {['private', 'public', 'abstract'].map(domain => (
           <button
-            onClick={() => setActiveFilters({ domains: [], modes: [] })}
+            key={domain}
+            onClick={() => toggleFilter('domains', domain)}
             style={{
-              width: '100%',
-              padding: '8px',
-              background: 'transparent',
-              border: '1px solid rgba(255,255,255,0.1)',
+              padding: '6px 12px',
+              background: activeFilters.domains.includes(domain) ? domainColors[domain] : '#0F1724',
+              border: `1px solid ${activeFilters.domains.includes(domain) ? domainColors[domain] : 'rgba(148, 163, 184, 0.2)'}`,
               borderRadius: '6px',
-              color: '#94A3B8',
+              color: activeFilters.domains.includes(domain) ? '#fff' : '#E6EEF8',
               cursor: 'pointer',
-              fontSize: '13px'
+              fontSize: '13px',
+              textTransform: 'capitalize',
+              fontWeight: activeFilters.domains.includes(domain) ? 600 : 400,
+              transition: 'all 0.15s'
             }}
           >
-            Clear All Filters
+            {domain}
           </button>
-        </div>
+        ))}
+      </div>
+    </div>
+
+    <div style={{ marginBottom: '16px' }}>
+      <div style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '8px', fontWeight: 600 }}>
+        Lenses
+      </div>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        {lenses.map(lens => (
+          <button
+            key={lens.id}
+            onClick={() => toggleFilter('lenses', lens.id)}
+            style={{
+              padding: '6px 12px',
+              background: activeFilters.lenses?.includes(lens.id) ? lens.color : '#0F1724',
+              border: `1px solid ${activeFilters.lenses?.includes(lens.id) ? lens.color : 'rgba(148, 163, 184, 0.2)'}`,
+              borderRadius: '6px',
+              color: activeFilters.lenses?.includes(lens.id) ? '#fff' : '#E6EEF8',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: activeFilters.lenses?.includes(lens.id) ? 600 : 400,
+              transition: 'all 0.15s'
+            }}
+          >
+            {lens.name}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <button
+      onClick={() => setActiveFilters({ domains: [], lenses: [] })}
+      style={{
+        width: '100%',
+        padding: '8px',
+        background: 'transparent',
+        fontWeight: 650,
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '6px',
+        color: '#94A3B8',
+        cursor: 'pointer',
+        fontSize: '13px'
+      }}
+    >
+      Clear All Filters
+    </button>
+  </div>
+)}
+      {/* Lens Dropdown */}
+      {showLensDropdown && (
+        <>
+          <div 
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 999
+            }}
+            onClick={() => setShowLensDropdown(false)}
+          />
+          <div style={{
+            position: 'absolute',
+            top: '70px',
+            right: '320px',
+            width: '280px',
+            background: 'linear-gradient(135deg, #1E293B 0%, #1A2332 100%)',
+            border: '1px solid rgba(236, 72, 153, 0.3)',
+            borderRadius: '12px',
+            padding: '16px',
+            zIndex: 1000,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+          }}>
+            <div style={{ 
+              fontSize: '12px', 
+              color: '#CBD5E1', 
+              marginBottom: '12px', 
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              Active Lenses
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {lenses.map(lens => (
+                <button
+                  key={lens.id}
+                  onClick={() => setActiveLensIds(prev => 
+                    prev.includes(lens.id) ? prev.filter(id => id !== lens.id) : [...prev, lens.id]
+                  )}
+                  style={{
+                    padding: '12px 14px',
+                    background: activeLensIds.includes(lens.id) 
+                      ? `linear-gradient(135deg, ${lens.color}40 0%, ${lens.color}20 100%)` 
+                      : 'rgba(15, 23, 36, 0.6)',
+                    border: `2px solid ${activeLensIds.includes(lens.id) ? lens.color : 'rgba(148, 163, 184, 0.2)'}`,
+                    borderRadius: '8px',
+                    color: activeLensIds.includes(lens.id) ? '#fff' : '#CBD5E1',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: activeLensIds.includes(lens.id) ? 700 : 500,
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    boxShadow: activeLensIds.includes(lens.id) 
+                      ? `0 4px 12px ${lens.color}40` 
+                      : 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!activeLensIds.includes(lens.id)) {
+                      e.target.style.background = 'rgba(30, 41, 59, 0.8)';
+                      e.target.style.borderColor = 'rgba(148, 163, 184, 0.4)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!activeLensIds.includes(lens.id)) {
+                      e.target.style.background = 'rgba(15, 23, 36, 0.6)';
+                      e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)';
+                    }
+                  }}
+                >
+                  <div style={{
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '50%',
+                    background: activeLensIds.includes(lens.id) 
+                      ? lens.color 
+                      : 'rgba(148, 163, 184, 0.3)',
+                    boxShadow: activeLensIds.includes(lens.id) 
+                      ? `0 0 8px ${lens.color}` 
+                      : 'none',
+                    transition: 'all 0.2s'
+                  }} />
+                  {lens.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       {/* Canvas */}
