@@ -1,122 +1,121 @@
 # Perception Map — Version 1 (Discontinued)
 
 This was my first attempt at making a tool for mapping perception.
-V1 helped me figure out what the project actually *was*, but the structure didn’t quite hold up, so I’m documenting it here before moving on to V2.
+V1 helped me figure out what the project actually *was*, but the structure didn’t hold up, so I’m documenting it here before moving on to V2.
 
 ---
 
-## What V1 Tried to Do
+## 🎯 What V1 Tried to Do
 
-The idea was simple:
+The idea:
 
-When you notice a perception happening — a reaction, a thought, a shift, whatever — you could map it visually by placing pieces of it into three categories:
+When you notice a perception happening — a reaction, a thought, a shift — you could break it down into three categories:
 
-* **Private** (internal sensations / emotions)
-* **Public** (behaviors / interactions)
-* **Abstract** (concepts / interpretations / frameworks)
+* **Private** — internal sensations, emotions
+* **Public** — behaviors, interactions
+* **Abstract** — interpretations, frameworks, concepts
 
 The UI was a big canvas with three circles.
-You dropped a node into whichever circle it belonged to, and then connected nodes together if they related.
+You dragged nodes into whichever circle fit, and connected them if they related.
 
-It worked in a basic sense. But the more I used it, the more I realized the structure was too rigid for how perception actually shows up.
+It worked… kind of. But the structure ended up being too rigid for how perception actually flows.
 
 ---
 
-## What Nodes Could Contain
+## 🧩 What Nodes Contained
 
-Each node had:
+Each node stored:
 
-* some text (the actual content)
-* a domain (decided by which circle you dropped it into)
-* an optional lens (like “psychological,” “relational,” etc.)
+* plain text (the content)
+* a domain (based on circle placement)
+* an optional lens (e.g., “psychological,” “relational”)
 * an optional interpretation or reflection
 
-Pretty minimal, pretty manual.
+Simple, but very manual.
 
 ---
 
-## Why I Ultimately Stopped Working on V1
+## 🛑 Why I Ultimately Stopped Working on V1
 
-Main reasons:
+### 1. The spatial layout became confusing
 
----
+Perception isn’t literally spatial, but the UI forced it to be.
 
-### 1. The three-circle layout ended up being more confusing than helpful
+### 2. It took too much mental effort
 
-Perception isn’t spatial, but the UI forced it to be.
+You had to think about *how* to map before mapping anything.
 
-### 2. Too much cognitive effort
+### 3. It pushed interpretation too early
 
-You had to think *about* how to map before you could map anything.
+Some perceptions just need to be noticed — not analyzed right away.
 
-### 3. Everything felt over-determined
+### 4. No way to see patterns across multiple moments
 
-Some experiences don’t want interpretation, but the UI nudged you to add one anyway.
+Everything stayed inside one canvas. No “bigger picture.”
 
-### 4. No good way to represent patterns across moments
+### 5. Architecture couldn’t scale
 
-Everything was stuck inside one perception instance, with no real “zoom out” view.
+One playground = one moment, with no system for organizing or saving instances.
 
-### 5. Architecturally, it didn’t scale
-
-One playground = one moment.
-No clear way to store or revisit multiple moments.
-
-All of this pushed me toward redesigning the whole thing instead of trying to force V1 forward.
+All of that led to starting V2 from scratch instead of patching V1.
 
 ---
 
-## Placeholder for Video Overview
+## 🎥 Video Overview (Placeholder)
 
 > **[Add Video Here]**
-> I’ll link a walkthrough of V1 and explain what worked, what didn’t, and why I’m rebuilding it.
+> I’ll include a walkthrough explaining what worked, what didn’t, and why I rebuilt everything.
 
 ---
 
-## What I Learned from V1
+## 🔍 What I Learned (and What Shaped V2)
 
-A few principles that shaped V2:
-
-* Domains shouldn’t be literal spaces — they should be simple tags.
+* Domains should be tags, not physical zones.
 * Not every node needs a lens or interpretation.
-* The UI shouldn’t pressure the user to “figure things out” prematurely.
-* Real insight comes from connecting multiple perception instances, not over-polishing one.
-* Flexibility > structure.
+* The UI should *never* pressure insight.
+* Insights come from linking across instances, not over-processing one.
+* Flexibility beats structure every time.
 
 ---
 
-## Project Status
+## 📦 Project Status
 
-* **V1:** Archived / reference only
-* **V2:** Being designed from scratch
-* **Purpose of this repo:** Portfolio and documentation
+* **V1:** Archived — used for reference only
+* **V2:** Being redesigned from the ground up
+* **This repo:** Documentation + starter scaffold
 
 ---
 
-# Perception Map — Starter Scaffold
+# 🧪 Perception Map — Starter Scaffold
 
-This repo also includes a minimal starter so the playground can run.
+This repo includes a minimal setup so the playground can run.
 
-## How to Run
+---
+
+## 🛠 How to Run
 
 1. `npm install`
 2. `npm run dev`
 
-Tech used:
+Tech stack:
 
-* Vite
-* React
-* Tailwind
-* React Flow
-* Dexie (for local IndexedDB storage)
+* ⚡ **Vite**
+* ⚛️ **React**
+* 🎨 **Tailwind**
+* 🧭 **React Flow**
+* 💾 **Dexie** (local IndexedDB)
 
-## Notes
+---
+
+## ✏️ Notes
 
 This starter is intentionally barebones.
-You can expand `CanvasView` to add:
+You can expand `CanvasView` however you want:
 
-* lens visuals
-* domain overlays
-* connection logic
-* node editing panel
-* anything else you want to experiment with
+* add lens visuals
+* add domain overlays
+* build link/connection logic
+* create a proper node editing panel
+* experiment with UI layouts
+
+It’s just the starting point — not the full tool.
